@@ -5,7 +5,7 @@
 static bool compareKeys(BUTTONS *pSecret, BUTTONS *pKey)
 {
     bool correct = true;
-    for (uint8_t i = 0; i < 7; i++)
+    for (uint8_t i = 0; i < 5; i++)
     {
         if (pSecret[i] != pKey[i]){
             correct = false;
@@ -45,18 +45,7 @@ void task3()
     const uint32_t FastInterval = 250U;
 
 
-    //Vars to delete
-    // const uint8_t ledBombCounting = 26;
-    // const uint8_t ledBombBoom = 25;
-    // const uint32_t BOMBINTERVAL = 1000U;
-    // const uint32_t LEDCOUNTERINTERVAL = 500U;
-    // static uint8_t ledBombCountingState;
-    // static uint32_t initBombTimer;
-    // static uint32_t initLedCounterTimer;
-    // static uint8_t bombCounter;
-
-
-    //Hold it at the time
+    //Password Var
     static BUTTONS secret[5] = {BUTTONS::U1_BTN, BUTTONS::U1_BTN,
                                 BUTTONS::U2_BTN, BUTTONS::U2_BTN,
                                 BUTTONS::U1_BTN};
@@ -64,24 +53,17 @@ void task3()
     static BUTTONS disarmKey[5] = {BUTTONS::NONE};
     static uint8_t keyCounter;    
 
+    bool switchState;
+
+
     switch (taskState)
     {
-
         //Initialization of Vars
         case TaskStates::INIT:
         {
             pinMode(ledBlink, OUTPUT);
             digitalWrite(ledBlink, LOW);
             lasTime = millis();
-
-
-            // pinMode(ledBombCounting, OUTPUT);
-            // pinMode(ledBombBoom, OUTPUT);
-            // digitalWrite(ledBombBoom, LOW);
-            // ledBombCountingState = HIGH;
-            // digitalWrite(ledBombCounting, ledBombCountingState);
-            // bombCounter = 20;
-
 
             keyCounter = 0;
             taskState = TaskStates::SLOW;
@@ -194,7 +176,22 @@ void task3()
 
             if(buttonEvt.trigger == true)
             {
-
+                buttonEvt.trigger = false;
+                disarmKey[keyCounter] = buttonEvt.whichButton;
+                keyCounter++;
+                if (keyCounter == 5)
+                {
+                    keyCounter = 0;
+                    if (compareKeys(secret, disarmKey) == true)
+                    {
+                        printf("To Start\n");
+                        taskState = TaskStates::SLOW;
+                    }
+                    else
+                    {
+                        printf("Failed Password\n");
+                    }
+                }
             }    
             break;
         }
@@ -213,6 +210,7 @@ void task3()
             }
             else if (buttonEvt.whichButton == BUTTONS::U2_BTN)
             {
+                switchState = true;
                 keyCounter = 0;
                 taskState = TaskStates::FAST;
                 printf("Change to Fast Mode: %d\n");
@@ -234,6 +232,7 @@ void task3()
             }
             else if (buttonEvt.whichButton == BUTTONS::U2_BTN)
             {
+                switchState = false;
                 keyCounter = 0;
                 taskState = TaskStates::FAST;
                 printf("Change to Fast Mode: %d\n");
@@ -242,41 +241,6 @@ void task3()
             }    
             break;
         }
-
-
-
-        // case TaskStates::WAIT_CONFIG:
-        // {
-
-        //     if (buttonEvt.trigger == true)
-        //     {
-        //         buttonEvt.trigger = false;
-        //         if (buttonEvt.whichButton == BUTTONS::U1_BTN)
-        //         {
-        //             if (bombCounter < 60)
-        //                 bombCounter++;
-        //         }
-        //         else if (buttonEvt.whichButton == BUTTONS::U2_BTN)
-        //         {
-        //             if (bombCounter > 10)
-        //                 bombCounter--;
-        //         }
-
-        //         else if (buttonEvt.whichButton == BUTTONS::ARM_BTN)
-        //         {
-        //             initLedCounterTimer = millis();
-        //             initBombTimer = millis();
-        //             keyCounter = 0;
-        //             taskState = TaskStates::COUNTING;
-        //         }
-        //         Serial.print("Counter: ");
-        //         Serial.print(bombCounter);
-        //         Serial.print("\n");
-        //     }
-
-        //     break;
-        // }
-
 
         // case TaskStates::COUNTING:
         // {
