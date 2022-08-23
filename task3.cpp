@@ -26,7 +26,9 @@ void task3()
         COUNTING,
         //MOF States
         SLOW,
+        WAIT_SLOW,
         MEDIUM,
+        WAIT_MEDIUM,
         FAST,
         PERMA_OFF,
         PERMA_ON
@@ -34,12 +36,13 @@ void task3()
     static TaskStates taskState = TaskStates::INIT;
 
     const uint8_t ledBlink = 25;
-    const uint32_t SlowInterval = 1000U;
-    const uint32_t MediumInterval = 500U;
-    const uint32_t FastInterval = 250U;
 
     static uint32_t lasTime;
     static bool ledStatus = false;
+
+    const uint32_t SlowInterval = 1000;
+    const uint32_t MediumInterval = 500U;
+    const uint32_t FastInterval = 250U;
 
 
     //Vars to delete
@@ -88,50 +91,107 @@ void task3()
 
         case TaskStates::SLOW:
         {
-            if(buttonEvt.trigger == true)
+            uint32_t currentTime = millis();
+
+            if( (currentTime - lasTime) >= SlowInterval )
             {
-                buttonEvt.trigger = false;
-            if(buttonEvt.whichButton == BUTTONS::U1_BTN)
-            {
-                taskState = TaskStates::PERMA_OFF;
-                printf("Change to Perma_OFF: %d\n");
-            }
-            if (buttonEvt.whichButton == BUTTONS::U2_BTN)
-            {
-                keyCounter = 0;
-                taskState = TaskStates::MEDIUM;
-                printf("Change to Medium Mode: %d\n");
+                lasTime = currentTime;
+                digitalWrite(ledBlink,ledStatus);
+                ledStatus = !ledStatus;
             }
 
-            }    
+            if(buttonEvt.trigger == true)
+            {
+
+                buttonEvt.trigger = false;
+                if(buttonEvt.whichButton == BUTTONS::U1_BTN)
+                {
+                    taskState = TaskStates::WAIT_SLOW;
+                    printf("Change to Wait: %d\n");
+                }
+                if (buttonEvt.whichButton == BUTTONS::U2_BTN)
+                {
+                    keyCounter = 0;
+                    taskState = TaskStates::MEDIUM;
+                    printf("Change to Medium Mode: %d\n");
+                }
+            
+            }   
             break;
         }
+
+        case TaskStates::WAIT_SLOW:
+        {
+            uint32_t currentTime = millis();
+
+            if( (currentTime - lasTime) >= SlowInterval )
+            {
+                digitalWrite(ledBlink, LOW);
+                taskState = TaskStates::PERMA_OFF;
+                printf("Change to Perma_OFF: %d\n");
+            } 
+            break;
+        }
+
 
         case TaskStates::MEDIUM:
         {
-            if(buttonEvt.trigger == true)
+            uint32_t currentTime = millis();
+
+            if( (currentTime - lasTime) >= MediumInterval )
             {
-                buttonEvt.trigger = false;
-            if(buttonEvt.whichButton == BUTTONS::U1_BTN)
-            {
-                taskState = TaskStates::PERMA_ON;
-                printf("Change to Perma_ON: %d\n");
-            }
-            if (buttonEvt.whichButton == BUTTONS::U2_BTN)
-            {
-                keyCounter = 0;
-                taskState = TaskStates::SLOW;
-                printf("Change to Slow Mode: %d\n");
+                lasTime = currentTime;
+                digitalWrite(ledBlink,ledStatus);
+                ledStatus = !ledStatus;
             }
 
-            }    
+            if(buttonEvt.trigger == true)
+            {
+
+                buttonEvt.trigger = false;
+                if(buttonEvt.whichButton == BUTTONS::U1_BTN)
+                {
+                    taskState = TaskStates::WAIT_MEDIUM;
+                    printf("Change to Wait: %d\n");
+                }
+                if (buttonEvt.whichButton == BUTTONS::U2_BTN)
+                {
+                    keyCounter = 0;
+                    taskState = TaskStates::SLOW;
+                    printf("Change to Slow Mode: %d\n");
+                }
+            }  
+            break;
+        }    
+            
+                case TaskStates::WAIT_MEDIUM:
+        {
+            uint32_t currentTime = millis();
+
+            if( (currentTime - lasTime) >= MediumInterval )
+            {
+                digitalWrite(ledBlink, HIGH);
+                taskState = TaskStates::PERMA_ON;
+                printf("Change to Perma_ON: %d\n");
+            } 
             break;
         }
 
+
         //Fast Mode (Difficult task)
 
-            case TaskStates::FAST:
+        case TaskStates::FAST:
         {
+            uint32_t currentTime = millis();
+
+            if( (currentTime - lasTime) >= FastInterval )
+            {
+                lasTime = currentTime;
+                digitalWrite(ledBlink,ledStatus);
+                ledStatus = !ledStatus;
+            }
+
+
             if(buttonEvt.trigger == true)
             {
 
