@@ -12,38 +12,32 @@ static bool compareKeys(BUTTONS *pSecret, BUTTONS *pKey)
             break;
         }
     }
-
     return correct;
 }
 
 void task3()
 {
-
     enum class TaskStates
     {
         INIT,
-        WAIT_CONFIG,
-        COUNTING,
         //MOF States
         SLOW,
-        WAIT_SLOW,
+        WAIT_OFF,
         MEDIUM,
-        WAIT_MEDIUM,
+        WAIT_ON,
         FAST,
         PERMA_OFF,
         PERMA_ON
     };
+
     static TaskStates taskState = TaskStates::INIT;
-
     const uint8_t ledBlink = 25;
-
     static uint32_t lasTime;
     static bool ledStatus = false;
-
     const uint32_t SlowInterval = 1000;
     const uint32_t MediumInterval = 500U;
     const uint32_t FastInterval = 250U;
-
+    static bool switchState;
 
     //Password Var
     static BUTTONS secret[5] = {BUTTONS::U1_BTN, BUTTONS::U1_BTN,
@@ -51,10 +45,7 @@ void task3()
                                 BUTTONS::U1_BTN};
 
     static BUTTONS disarmKey[5] = {BUTTONS::NONE};
-    static uint8_t keyCounter;    
-
-    bool switchState;
-
+    static uint8_t keyCounter;
 
     switch (taskState)
     {
@@ -70,7 +61,6 @@ void task3()
             break;
         }
 
-
         case TaskStates::SLOW:
         {
             uint32_t currentTime = millis();
@@ -84,11 +74,10 @@ void task3()
 
             if(buttonEvt.trigger == true)
             {
-
                 buttonEvt.trigger = false;
                 if(buttonEvt.whichButton == BUTTONS::U1_BTN)
                 {
-                    taskState = TaskStates::WAIT_SLOW;
+                    taskState = TaskStates::WAIT_OFF;
                     printf("Change to Wait: %d\n");
                 }
                 if (buttonEvt.whichButton == BUTTONS::U2_BTN)
@@ -96,16 +85,14 @@ void task3()
                     keyCounter = 0;
                     taskState = TaskStates::MEDIUM;
                     printf("Change to Medium Mode: %d\n");
-                }
-            
+                }            
             }   
             break;
         }
 
-        case TaskStates::WAIT_SLOW:
+        case TaskStates::WAIT_OFF:
         {
             uint32_t currentTime = millis();
-
             if( (currentTime - lasTime) >= SlowInterval )
             {
                 digitalWrite(ledBlink, LOW);
@@ -115,11 +102,9 @@ void task3()
             break;
         }
 
-
         case TaskStates::MEDIUM:
         {
             uint32_t currentTime = millis();
-
             if( (currentTime - lasTime) >= MediumInterval )
             {
                 lasTime = currentTime;
@@ -129,11 +114,10 @@ void task3()
 
             if(buttonEvt.trigger == true)
             {
-
                 buttonEvt.trigger = false;
                 if(buttonEvt.whichButton == BUTTONS::U1_BTN)
                 {
-                    taskState = TaskStates::WAIT_MEDIUM;
+                    taskState = TaskStates::WAIT_ON;
                     printf("Change to Wait: %d\n");
                 }
                 if (buttonEvt.whichButton == BUTTONS::U2_BTN)
@@ -146,10 +130,9 @@ void task3()
             break;
         }    
             
-                case TaskStates::WAIT_MEDIUM:
+        case TaskStates::WAIT_ON:
         {
             uint32_t currentTime = millis();
-
             if( (currentTime - lasTime) >= MediumInterval )
             {
                 digitalWrite(ledBlink, HIGH);
@@ -159,20 +142,16 @@ void task3()
             break;
         }
 
-
         //Fast Mode (Difficult task)
-
         case TaskStates::FAST:
         {
             uint32_t currentTime = millis();
-
             if( (currentTime - lasTime) >= FastInterval )
             {
                 lasTime = currentTime;
                 digitalWrite(ledBlink,ledStatus);
                 ledStatus = !ledStatus;
             }
-
 
             if(buttonEvt.trigger == true)
             {
@@ -184,8 +163,18 @@ void task3()
                     keyCounter = 0;
                     if (compareKeys(secret, disarmKey) == true)
                     {
-                        printf("To Start\n");
-                        taskState = TaskStates::SLOW;
+                        if(switchState == true)
+                        {
+                            digitalWrite(ledBlink, HIGH);
+                            printf("Back to ON\n");
+                            taskState = TaskStates::PERMA_ON;
+                        }
+                        else if(switchState == false)
+                        {
+                            digitalWrite(ledBlink, LOW);
+                            printf("Back to OFF\n");
+                            taskState = TaskStates::PERMA_OFF;
+                        }                        
                     }
                     else
                     {
@@ -197,104 +186,51 @@ void task3()
         }
 
         //LED PERMA States
-
-            case TaskStates::PERMA_ON:
+        case TaskStates::PERMA_ON:
         {
+            bool pon = true;
             if(buttonEvt.trigger == true)
             {
                 buttonEvt.trigger = false;
-            if(buttonEvt.whichButton == BUTTONS::U1_BTN)
-            {
-                taskState = TaskStates::MEDIUM;
-                printf("Change to Medium Mode: %d\n");
-            }
-            else if (buttonEvt.whichButton == BUTTONS::U2_BTN)
-            {
-                switchState = true;
-                keyCounter = 0;
-                taskState = TaskStates::FAST;
-                printf("Change to Fast Mode: %d\n");
-            }
-
+                if(buttonEvt.whichButton == BUTTONS::U1_BTN)
+                {
+                    taskState = TaskStates::MEDIUM;
+                    printf("Change to Medium Mode: %d\n");
+                }
+                else if (buttonEvt.whichButton == BUTTONS::U2_BTN)
+                {
+                    switchState = pon; 
+                    keyCounter = 0;
+                    taskState = TaskStates::FAST;
+                    printf("Change to Fast Mode: %d\n");
+                    printf("Boolean: %d\n", switchState);
+                }
             }    
             break;
         }
 
-            case TaskStates::PERMA_OFF:
+        case TaskStates::PERMA_OFF:
         {
+            bool poff = false;
             if(buttonEvt.trigger == true)
             {
                 buttonEvt.trigger = false;
-            if(buttonEvt.whichButton == BUTTONS::U1_BTN)
-            {
-                taskState = TaskStates::SLOW;
-                printf("Change to SLOW: %d\n");
-            }
-            else if (buttonEvt.whichButton == BUTTONS::U2_BTN)
-            {
-                switchState = false;
-                keyCounter = 0;
-                taskState = TaskStates::FAST;
-                printf("Change to Fast Mode: %d\n");
-            }
-
+                if(buttonEvt.whichButton == BUTTONS::U1_BTN)
+                {
+                    taskState = TaskStates::SLOW;
+                    printf("Change to Slow Mode: %d\n");
+                }
+                else if (buttonEvt.whichButton == BUTTONS::U2_BTN)
+                {
+                    switchState = poff;  
+                    keyCounter = 0;
+                    taskState = TaskStates::FAST;
+                    printf("Change to Fast Mode: %d\n");
+                    printf("Boolean: %d\n", switchState);
+                }
             }    
             break;
         }
-
-        // case TaskStates::COUNTING:
-        // {
-
-        //     uint32_t timeNow = millis();
-
-        //     if ((timeNow - initBombTimer) > BOMBINTERVAL)
-        //     {
-        //         initBombTimer = timeNow;
-        //         bombCounter--;
-        //         Serial.print("Counter: ");
-        //         Serial.print(bombCounter);
-        //         Serial.print("\n");
-        //         if (bombCounter == 0)
-        //         {
-        //             ledBombCountingState = HIGH;
-        //             Serial.print("BOMB BOOM\n");
-        //             digitalWrite(ledBombBoom, HIGH);
-        //             delay(2000);
-        //             digitalWrite(ledBombBoom, LOW);
-        //             digitalWrite(ledBombCounting, ledBombCountingState);
-        //             bombCounter = 20;
-        //             taskState = TaskStates::WAIT_CONFIG;
-        //         }
-        //     }
-        //     if ((timeNow - initLedCounterTimer) > LEDCOUNTERINTERVAL)
-        //     {
-        //         initLedCounterTimer = timeNow;
-        //         ledBombCountingState = !ledBombCountingState;
-        //         digitalWrite(ledBombCounting, ledBombCountingState);
-        //     }
-
-        //     if (buttonEvt.trigger == true)
-        //     {
-        //         buttonEvt.trigger = false;
-        //         disarmKey[keyCounter] = buttonEvt.whichButton;
-        //         keyCounter++;
-        //         if (keyCounter == 7)
-        //         {
-        //             keyCounter = 0;
-        //             if (compareKeys(secret, disarmKey) == true)
-        //             {
-        //                 ledBombCountingState = HIGH;
-        //                 digitalWrite(ledBombCounting, ledBombCountingState);
-        //                 Serial.print("BOMB DISARM\n");
-        //                 bombCounter = 20;
-        //                 taskState = TaskStates::WAIT_CONFIG;
-        //             }
-        //         }
-        //     }
-
-        //     break;
-        // }
-
 
         default:
         {
