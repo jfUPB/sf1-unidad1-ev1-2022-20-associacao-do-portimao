@@ -188,7 +188,6 @@ void task3()
         //LED PERMA States
         case TaskStates::PERMA_ON:
         {
-            bool pon = true;
             if(buttonEvt.trigger == true)
             {
                 buttonEvt.trigger = false;
@@ -199,7 +198,7 @@ void task3()
                 }
                 else if (buttonEvt.whichButton == BUTTONS::U2_BTN)
                 {
-                    switchState = pon; 
+                    switchState = true; 
                     keyCounter = 0;
                     taskState = TaskStates::FAST;
                     printf("Change to Fast Mode: %d\n");
@@ -210,8 +209,7 @@ void task3()
         }
 
         case TaskStates::PERMA_OFF:
-        {
-            bool poff = false;
+        { 
             if(buttonEvt.trigger == true)
             {
                 buttonEvt.trigger = false;
@@ -222,7 +220,7 @@ void task3()
                 }
                 else if (buttonEvt.whichButton == BUTTONS::U2_BTN)
                 {
-                    switchState = poff;  
+                    switchState = false;  
                     keyCounter = 0;
                     taskState = TaskStates::FAST;
                     printf("Change to Fast Mode: %d\n");
