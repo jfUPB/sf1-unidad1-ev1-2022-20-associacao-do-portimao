@@ -38,11 +38,11 @@
 # Exam Overview
 
 ### Video demostrativo del funiconamiento en el ensamblaje físico
-	[Click aquí para ver el video](https://youtu.be/prhbxSGy8qI)
+	Click [aquí para ver el video](https://youtu.be/prhbxSGy8qI).
 
 ## review del código
 
- * Empezamos por la función de la lógica del programa, **Task3**, donde vamos a declarar todos los estados necesarios antes de recurrir a ellos
+* Empezamos por la función de la lógica del programa, **Task3**, donde vamos a declarar todos los estados necesarios antes de recurrir a ellos
 ```
 void task3()
 {
@@ -81,7 +81,7 @@ void task3()
     static uint8_t keyCounter;
 ```
 
-* A continuación inicializamos el ciclo **Switch** el cual recibe al objeto --taskState-- para poder cambiar los estados
+* A continuación inicializamos el ciclo **Switch** el cual recibe al objeto **taskState** para poder cambiar los estados
 
 ```
 
@@ -132,6 +132,180 @@ si es U2, entra en el estado **MEDIUM**
                     printf("Change to Medium Mode: %d\n");
                 }            
             }   
+            break;
+        }
+```
+
+* El siguiente es el estado **WAIT_OFF** el cual está hehco para esperar a que el LED termine su ciclo de parpadeo y
+EN CASO DE ESTAR APAGADO y proceda a **PERMA_OFF**
+```
+
+case TaskStates::WAIT_OFF:
+        {
+            uint32_t currentTime = millis();
+            if( (currentTime - lasTime) >= SlowInterval )
+            {
+                digitalWrite(ledBlink, LOW);
+                taskState = TaskStates::PERMA_OFF;
+                printf("Change to Perma_OFF: %d\n");
+            } 
+            break;
+        }
+```
+
+* Antes de mostrar el estado **PERMA_OFF**, revisemos **MEDIUM**. Este estado vuelve a chequear la frecuencia del LED
+después revisa si algún botón fue pulsado. En caso de que sea U1, entra en el estado **WAIT_ON**, si se presiona U2
+Nos regresa al estado **SLOW**
+
+```
+
+ case TaskStates::MEDIUM:
+        {
+            uint32_t currentTime = millis();
+            if( (currentTime - lasTime) >= MediumInterval )
+            {
+                lasTime = currentTime;
+                digitalWrite(ledBlink,ledStatus);
+                ledStatus = !ledStatus;
+            }
+
+            if(buttonEvt.trigger == true)
+            {
+                buttonEvt.trigger = false;
+                if(buttonEvt.whichButton == BUTTONS::U1_BTN)
+                {
+                    taskState = TaskStates::WAIT_ON;
+                    printf("Change to Wait: %d\n");
+                }
+                if (buttonEvt.whichButton == BUTTONS::U2_BTN)
+                {
+                    keyCounter = 0;
+                    taskState = TaskStates::SLOW;
+                    printf("Change to Slow Mode: %d\n");
+                }
+            }  
+            break;
+```
+
+* El siguiente es el estado **WAIT_ON** el cual está hehco para esperar a que el LED termine su ciclo de parpadeo y
+ EN CASO DE ESTAR ENCENDIDO y proceda a **PERMA_OFF**
+
+```
+
+  case TaskStates::WAIT_ON:
+        {
+            uint32_t currentTime = millis();
+            if( (currentTime - lasTime) >= MediumInterval )
+            {
+                digitalWrite(ledBlink, HIGH);
+                taskState = TaskStates::PERMA_ON;
+                printf("Change to Perma_ON: %d\n");
+            } 
+            break;
+        }
+```
+
+* Tenemos 2 estados permanentes, EL primero **PERMA_ON**, revisa si algún botón fue pulsado y cual, si fué **U1** y pasa al 
+estado **MEDIUM**, si fué el **U2**, entra en modo **FAST**
+
+```
+
+ case TaskStates::PERMA_ON:
+        {
+            if(buttonEvt.trigger == true)
+            {
+                buttonEvt.trigger = false;
+                if(buttonEvt.whichButton == BUTTONS::U1_BTN)
+                {
+                    taskState = TaskStates::MEDIUM;
+                    printf("Change to Medium Mode: %d\n");
+                }
+                else if (buttonEvt.whichButton == BUTTONS::U2_BTN)
+                {
+                    switchState = true; 
+                    keyCounter = 0;
+                    taskState = TaskStates::FAST;
+                    printf("Change to Fast Mode: %d\n");
+                    printf("Boolean: %d\n", switchState);
+                }
+            }    
+            break;
+        }
+```
+
+* Tenemos 2 estados permanentes, EL segundo **PERMA_OFF**, revisa si algún botón fue pulsado y cual, si fué **U1** y pasa al 
+estado **SLOW**, si fué el **U2**, entra en modo **FAST**
+
+```
+
+case TaskStates::PERMA_OFF:
+        { 
+            if(buttonEvt.trigger == true)
+            {
+                buttonEvt.trigger = false;
+                if(buttonEvt.whichButton == BUTTONS::U1_BTN)
+                {
+                    taskState = TaskStates::SLOW;
+                    printf("Change to Slow Mode: %d\n");
+                }
+                else if (buttonEvt.whichButton == BUTTONS::U2_BTN)
+                {
+                    switchState = false;  
+                    keyCounter = 0;
+                    taskState = TaskStates::FAST;
+                    printf("Change to Fast Mode: %d\n");
+                    printf("Boolean: %d\n", switchState);
+                }
+            }    
+            break;
+        }
+```
+
+* Procedemos con el estado **FAST**, este vuelve a revisar la frecuencia de parpadeo del modo  y establece las variables, después
+revisda si se pulsó algún botón, en caso de que si, accede al arreglo de la contraseña y compara las teclas presionadas con las
+almacenadas en el arreglo.
+
+```
+
+ case TaskStates::FAST:
+        {
+            uint32_t currentTime = millis();
+            if( (currentTime - lasTime) >= FastInterval )
+            {
+                lasTime = currentTime;
+                digitalWrite(ledBlink,ledStatus);
+                ledStatus = !ledStatus;
+            }
+
+            if(buttonEvt.trigger == true)
+            {
+                buttonEvt.trigger = false;
+                disarmKey[keyCounter] = buttonEvt.whichButton;
+                keyCounter++;
+                if (keyCounter == 5)
+                {
+                    keyCounter = 0;
+                    if (compareKeys(secret, disarmKey) == true)
+                    {
+                        if(switchState == true)
+                        {
+                            digitalWrite(ledBlink, HIGH);
+                            printf("Back to ON\n");
+                            taskState = TaskStates::PERMA_ON;
+                        }
+                        else if(switchState == false)
+                        {
+                            digitalWrite(ledBlink, LOW);
+                            printf("Back to OFF\n");
+                            taskState = TaskStates::PERMA_OFF;
+                        }                        
+                    }
+                    else
+                    {
+                        printf("Failed Password\n");
+                    }
+                }
+            }    
             break;
         }
 ```
