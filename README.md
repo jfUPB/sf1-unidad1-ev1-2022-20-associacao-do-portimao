@@ -37,8 +37,8 @@
 
 # Exam Overview
 
-### Video demostrativo del funiconamiento en el ensamblaje físico
-	Click [aquí para ver el video](https://youtu.be/prhbxSGy8qI).
+### Video demostrativo del funiconamiento en el ensamblaje físico:
+ > https://youtu.be/prhbxSGy8qI
 
 ## review del código
 
