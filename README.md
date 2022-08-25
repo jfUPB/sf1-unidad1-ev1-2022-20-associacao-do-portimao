@@ -192,7 +192,7 @@ Nos regresa al estado **SLOW**
 ```
 
 * El siguiente es el estado **WAIT_ON** el cual está hecho para esperar a que el LED termine su ciclo de parpadeo y
- EN CASO DE ESTAR ENCENDIDO y proceda a **PERMA_OFF**
+ EN CASO DE ESTAR ENCENDIDO y proceda a **PERMA_ON**
 
 ```
 
@@ -266,7 +266,7 @@ case TaskStates::PERMA_OFF:
 ```
 
 * Procedemos con el estado **FAST**, este vuelve a revisar la frecuencia de parpadeo del modo  y establece las variables, después
-revisda si se pulsó algún botón, en caso de que si, accede al arreglo de la contraseña y compara las teclas presionadas con las
+revisa si se pulsó algún botón, en caso de que si, accede al arreglo de la contraseña y compara las teclas presionadas con las
 almacenadas en el arreglo.
 
 ```
