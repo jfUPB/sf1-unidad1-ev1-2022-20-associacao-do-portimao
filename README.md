@@ -39,7 +39,11 @@
 
 ### Video demostrativo del funiconamiento en el ensamblaje físico:
  > https://youtu.be/prhbxSGy8qI
-
+ 
+ ### Diagrama Máquina de estado
+ 
+![Diagrama](https://github.com/jfUPB/sf1-unidad1-ev1-2022-20-associacao-do-portimao/blob/main/EsquemaParcial.png?raw=true)
+##
 ## review del código
 
 * Empezamos por la función de la lógica del programa, **Task3**, donde vamos a declarar todos los estados necesarios antes de recurrir a ellos
@@ -136,7 +140,7 @@ si es U2, entra en el estado **MEDIUM**
         }
 ```
 
-* El siguiente es el estado **WAIT_OFF** el cual está hehco para esperar a que el LED termine su ciclo de parpadeo y
+* El siguiente es el estado **WAIT_OFF** el cual está hecho para esperar a que el LED termine su ciclo de parpadeo y
 EN CASO DE ESTAR APAGADO y proceda a **PERMA_OFF**
 ```
 
@@ -187,7 +191,7 @@ Nos regresa al estado **SLOW**
             break;
 ```
 
-* El siguiente es el estado **WAIT_ON** el cual está hehco para esperar a que el LED termine su ciclo de parpadeo y
+* El siguiente es el estado **WAIT_ON** el cual está hecho para esperar a que el LED termine su ciclo de parpadeo y
  EN CASO DE ESTAR ENCENDIDO y proceda a **PERMA_OFF**
 
 ```
